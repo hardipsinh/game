@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory Match Championship - Professional Edition</title>
@@ -75,7 +77,7 @@
             text-align: center;
             position: relative;
             max-height: 95vh;
-            overflow-y: auto;
+            overflow-y: hidden;
             border: 1px solid rgba(0, 212, 255, 0.2);
         }
 
@@ -402,13 +404,13 @@
 
         .game-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+            grid-template-columns: repeat(var(--columns), 1fr);
             gap: 15px;
             justify-content: center;
             max-width: 900px;
             margin: 0 auto;
             max-height: 60vh;
-            overflow-y: auto;
+            overflow-y: hidden;
             padding: 10px;
         }
 
@@ -447,7 +449,7 @@
 
         @keyframes matchSuccess {
             0% { box-shadow: 0 0 0 rgba(34, 211, 238, 0); }
-            50% { box-shadow: 0 0 40px rgba(34, 211, 238, 1); }
+            50% { box-shadow: 0 0 40px rgba(34, 211, 238, 0.8); }
             100% { box-shadow: 0 0 25px var(--match-glow); }
         }
 
@@ -529,7 +531,7 @@
 
         .hint-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
+            box-shadow: 6px 20px rgba(251, 191, 36, 0.5);
         }
 
         .hint-button:disabled {
@@ -867,12 +869,7 @@
             .card-name {
                 font-size: 0.8rem;
             }
-            
-            .game-grid {
-                grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
-                gap: 12px;
-            }
-
+        
             .leaderboard-stats-summary {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 15px;
@@ -889,28 +886,20 @@
         .game-grid::-webkit-scrollbar,
         .leaderboard-table-container::-webkit-scrollbar,
         .game-container::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
+            width: 0;
+            height: 0;
         }
 
         .game-grid::-webkit-scrollbar-track,
         .leaderboard-table-container::-webkit-scrollbar-track,
         .game-container::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
+            background: transparent;
         }
 
         .game-grid::-webkit-scrollbar-thumb,
         .leaderboard-table-container::-webkit-scrollbar-thumb,
         .game-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, var(--accent-color), var(--success-color));
-            border-radius: 5px;
-        }
-
-        .game-grid::-webkit-scrollbar-thumb:hover,
-        .leaderboard-table-container::-webkit-scrollbar-thumb:hover,
-        .game-container::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            background: transparent;
         }
     </style>
 </head>
@@ -1276,7 +1265,9 @@
 
             // Validate board size
             if (boardSize < 4 || boardSize > 200 || boardSize % 2 !== 0) {
-                alert('Board size must be between 4-200 and an even number!');
+                // Using a custom modal or message box instead of alert()
+                document.getElementById('status-display').textContent = 'Board size must be between 4-200 and an even number!';
+                setTimeout(() => updateStatus('Click cards to find matching pairs!'), 3000);
                 return;
             }
 
@@ -1322,13 +1313,28 @@
             document.getElementById('hint-btn').style.display = 'block';
             updateStatus(`${gameState.players[gameState.currentPlayerIndex].name}'s turn!`);
         }
+        
+        // New function to dynamically set an even number of columns
+        function setEvenColumns() {
+            const gameGrid = document.getElementById('game-grid');
+            const gridWidth = gameGrid.offsetWidth;
+            const cardMinWidth = 110;
+            const gapWidth = 15;
+            let columns = Math.floor(gridWidth / (cardMinWidth + gapWidth));
+            
+            // Ensure the number of columns is always even, and at least 2
+            if (columns % 2 !== 0) {
+                columns = Math.max(2, columns - 1);
+            } else {
+                columns = Math.max(2, columns);
+            }
+            
+            gameGrid.style.setProperty('--columns', columns);
+        }
 
         function createGameBoard() {
             const gameGrid = document.getElementById('game-grid');
             gameGrid.innerHTML = '';
-
-            // Calculate optimal grid layout - Removed fixed column logic for fluid responsiveness
-            const totalCards = gameState.boardSize;
 
             // Get object data based on language
             const objectData = gameState.language === 'gu-IN' ? objectDataGujarati : objectDataEnglish;
@@ -1379,6 +1385,9 @@
                     matched: false
                 };
             });
+            
+            setEvenColumns(); // Call the new function to set the initial column count
+            showScreen('game-screen');
         }
 
         function setupPlayerDisplay() {
@@ -1806,7 +1815,9 @@
         }
 
         function quitGame() {
-            if (confirm('Are you sure you want to quit to main menu? Current game progress will be lost.')) {
+            // Using a custom modal-like approach instead of confirm()
+            const message = 'Are you sure you want to quit to main menu? Current game progress will be lost.';
+            if (confirm(message)) {
                 restartGame();
             }
         }
@@ -2020,7 +2031,12 @@
                 speechSynthesis.onvoiceschanged = loadVoices;
             }
             loadVoices();
+            
+            // Set initial column count and re-evaluate on resize
+            setEvenColumns();
+            window.addEventListener('resize', setEvenColumns);
         });
     </script>
 </body>
 </html>
+
