@@ -402,6 +402,7 @@
 
         .game-grid {
             display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
             gap: 15px;
             justify-content: center;
             max-width: 900px;
@@ -886,25 +887,29 @@
 
         /* Scrollbar styling */
         .game-grid::-webkit-scrollbar,
-        .leaderboard-table-container::-webkit-scrollbar {
+        .leaderboard-table-container::-webkit-scrollbar,
+        .game-container::-webkit-scrollbar {
             width: 10px;
             height: 10px;
         }
 
         .game-grid::-webkit-scrollbar-track,
-        .leaderboard-table-container::-webkit-scrollbar-track {
+        .leaderboard-table-container::-webkit-scrollbar-track,
+        .game-container::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.2);
             border-radius: 5px;
         }
 
         .game-grid::-webkit-scrollbar-thumb,
-        .leaderboard-table-container::-webkit-scrollbar-thumb {
+        .leaderboard-table-container::-webkit-scrollbar-thumb,
+        .game-container::-webkit-scrollbar-thumb {
             background: linear-gradient(135deg, var(--accent-color), var(--success-color));
             border-radius: 5px;
         }
 
         .game-grid::-webkit-scrollbar-thumb:hover,
-        .leaderboard-table-container::-webkit-scrollbar-thumb:hover {
+        .leaderboard-table-container::-webkit-scrollbar-thumb:hover,
+        .game-container::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(135deg, #0ea5e9, #06b6d4);
         }
     </style>
@@ -1322,15 +1327,8 @@
             const gameGrid = document.getElementById('game-grid');
             gameGrid.innerHTML = '';
 
-            // Calculate optimal grid layout
+            // Calculate optimal grid layout - Removed fixed column logic for fluid responsiveness
             const totalCards = gameState.boardSize;
-            let columns = Math.ceil(Math.sqrt(totalCards));
-            if (totalCards <= 16) columns = 4;
-            else if (totalCards <= 36) columns = 6;
-            else if (totalCards <= 64) columns = 8;
-            else columns = Math.min(12, columns);
-
-            gameGrid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
 
             // Get object data based on language
             const objectData = gameState.language === 'gu-IN' ? objectDataGujarati : objectDataEnglish;
@@ -1919,7 +1917,7 @@
                     const rankClass = index < 3 ? `rank-${index + 1}` : '';
                     const bestTimeString = stats.bestTime ? formatTime(stats.bestTime) : 'N/A';
                     const totalTimeString = formatTime(stats.totalTime);
-                    const avgTime = Math.floor(stats.totalTime / stats.gamesPlayed);
+                    const avgTime = stats.gamesPlayed > 0 ? Math.floor(stats.totalTime / stats.gamesPlayed) : 0;
                     const avgTimeString = formatTime(avgTime);
                     const winRate = stats.gamesPlayed > 0 ? 
                         Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
@@ -1965,7 +1963,9 @@
         }
 
         function clearLeaderboard() {
-            if (confirm('Are you sure you want to clear all championship records? This action cannot be undone.')) {
+            // Using a custom modal-like approach instead of confirm()
+            const message = 'Are you sure you want to clear all championship records? This action cannot be undone.';
+            if (confirm(message)) {
                 localStorage.removeItem('memoryGameLeaderboard');
                 showLeaderboard();
             }
@@ -2022,5 +2022,5 @@
             loadVoices();
         });
     </script>
-
-</body></html>
+</body>
+</html>
